@@ -1,191 +1,404 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Glass Water Sort lite</title>
+  <title>Water Sort Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
       text-align: center;
       font-family: Arial;
-      background: #1e1e2f;
       color: white;
+      background: url("https://aad.hsu.edu.hk/wp-content/uploads/2020/07/geometric-dark-bg.jpg") no-repeat center center fixed;
+      background-size: cover;
     }
 
-    h1 { margin-top: 20px; }
-    h2 { margin-top: 20px; }
+    h1 { margin-top: 15px; }
 
-    /* Wider container for spaced bottles */
     .container {
-    display: flex;
-    justify-content: center;
-    padding-top: 119px;
-    flex-wrap: wrap;
-    width: 90%;
-    margin-left: auto;
-    margin-right: auto;
-    gap: 40px;
-}
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 35px;
+      padding-top: 80px;
+    }
 
     .glass {
       width: 60px;
-      height: 180px;
-      cursor: pointer;
+      height: 190px;
+      border-radius: 0 0 25px 25px;
+      border: 3px solid rgba(255,255,255,0.3);
       display: flex;
       flex-direction: column-reverse;
       overflow: hidden;
-      border: 3px solid rgba(255,255,255,0.35);
-      border-radius: 0 0 25px 25px;
-      background: rgba(255,255,255,0.08);
-      box-shadow:
-        inset 0 0 10px rgba(255,255,255,0.2),
-        inset 0 -5px 15px rgba(0,0,0,0.2),
-        0 3px 10px rgba(0,0,0,0.3);
-      backdrop-filter: blur(3px);
-      transition: transform 0.5s ease;
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      position: relative;
     }
 
-    .glass.pouring-left { transform: rotate(120deg) translateX(10px); }
-    .glass.pouring-right  { transform: rotate(-120deg) translateX(-10px); }
+    .glass.selected {
+      transform: scale(1.08);
+      outline: 3px solid #fff;
+    }
+
+    .glass.completed {
+      border: 2px solid #00ff99;
+      box-shadow: 0 0 12px rgba(0,255,153,0.7);
+    }
+
+    .glass.invalid {
+      animation: shake 0.25s linear 2;
+    }
+
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      50% { transform: translateX(5px); }
+      75% { transform: translateX(-5px); }
+      100% { transform: translateX(0); }
+    }
 
     .layer {
       width: 100%;
       height: 25%;
-      border-top: 1px solid rgba(255,255,255,0.2);
-      border-radius: 4px 4px 0 0;
-      transition: all 0.5s ease;
     }
 
-    button{
-      margin: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
+    button {
+      margin: 5px;
+      padding: 10px 16px;
+      border-radius: 20px;
+      border: none;
       cursor: pointer;
-      border-radius: 30px;
+      font-weight: bold;
     }
-    button:hover{
-      background-color:#c3b2b2;
+
+    button:disabled {
+      opacity: 0.5;
     }
+
+    #startScreen {
+      position: fixed;
+      inset: 0;
+      background: url("https://ranoo.in/wp-content/uploads/2015/03/bg-9-full.jpg");
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    #winPopup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      font-size: 24px;
+    }
+
+    img { width: 50%; }
+
+    /* =========================
+   RESPONSIVE DESIGN
+========================= */
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 22px;
+  }
+
+  .container {
+    gap: 20px;
+    padding-top: 40px;
+  }
+
+  .glass {
+    width: 45px;
+    height: 150px;
+    border-radius: 0 0 18px 18px;
+  }
+
+  button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  #startScreen img {
+    width: 80%;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 18px;
+  }
+
+  h3, h4 {
+    font-size: 14px;
+  }
+
+  .container {
+    gap: 12px;
+    padding-top: 25px;
+  }
+
+  .glass {
+    width: 35px;
+    height: 120px;
+    border-radius: 0 0 15px 15px;
+  }
+
+  .layer {
+    height: 25%;
+  }
+
+  button {
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  #startScreen h1 {
+    font-size: 20px;
+  }
+
+  #winPopup {
+    font-size: 18px;
+    text-align: center;
+    padding: 20px;
+  }
+}
   </style>
 </head>
+
 <body>
 
-<h1>Glass Water Sort lite</h1>
-<h2 id="levelText">Level 1</h2>
+<!-- ✅ START SCREEN (RESTORED) -->
+<div id="startScreen">
+  <img src="Gemini_Generated_Image_f80ldcf80ldcf80l-Photoroom.png">
+  <h1>Water Sort PRO</h1>
+  <button onclick="startGame()">▶️ Start Game</button>
+</div>
+
+<h1>Water Sort PRO</h1>
+
+<h3 id="levelText"></h3>
+<h4 id="moveText"></h4>
 
 <div class="container" id="game"></div>
 
-<button onclick="restart()">Restart</button>
-<button onclick="nextLevel()">Next Level</button>
+<div>
+  <button onclick="undo()">↩️ Undo</button>
+  <button onclick="restart()">🔄 Restart</button>
+  <button id="nextBtn" onclick="nextLevel()" disabled>➡️ Next Level</button>
+</div>
+
+<div id="winPopup">
+  🎉 Level Complete!
+  <button onclick="nextLevel()">Next Level</button>
+</div>
 
 <script>
-let totalLevels = 230;
-let currentLevel = 0;
+let level = 0;
 let glasses = [];
 let selected = null;
-let levelPassed = false;
+let isBusy = false;
+let history = [];
+let moves = 0;
 
-const colorsList = [
-  "red","blue","green","yellow","purple",
-  "orange","cyan","pink","lime","magenta"
-];
+const colors = ["red","blue","green","yellow","purple","orange","cyan","pink","lime","magenta"];
 
-function generateLevel(level) {
-  let colorCount = Math.min(3 + Math.floor(level / 10), colorsList.length);
-  let emptyGlasses = 2 + Math.floor(level / 30);
-  let selectedColors = colorsList.slice(0, colorCount);
+// START GAME
+function startGame() {
+  document.getElementById("startScreen").style.display = "none";
+  load();
+}
+
+// GENERATE LEVEL
+function generate(level) {
+  let colorCount = Math.min(3 + Math.floor(level / 5), 7);
+  let empty = 2;
+
+  let chosen = colors.slice(0, colorCount);
   let temp = [];
-  selectedColors.forEach(color => { for(let i=0;i<4;i++) temp.push(color); });
+
+  chosen.forEach(c => {
+    for (let i = 0; i < 4; i++) temp.push(c);
+  });
+
   temp.sort(() => Math.random() - 0.5);
 
-  let totalGlasses = colorCount + emptyGlasses;
-  let newGlasses = Array.from({ length: totalGlasses }, () => []);
+  let total = colorCount + empty;
+  let g = Array.from({ length: total }, () => []);
+
   temp.forEach(color => {
-    let placed = false;
-    while(!placed){
-      let g = Math.floor(Math.random()*totalGlasses);
-      if(newGlasses[g].length < 4){
-        newGlasses[g].push(color);
-        placed = true;
+    while (true) {
+      let r = Math.floor(Math.random() * total);
+      if (g[r].length < 4) {
+        g[r].push(color);
+        break;
       }
     }
   });
-  return newGlasses;
+
+  return g;
 }
 
-function loadLevel() {
-  glasses = generateLevel(currentLevel);
+// LOAD
+function load() {
+  glasses = generate(level);
   selected = null;
-  levelPassed = false;
-  document.getElementById("levelText").innerText = "Level " + (currentLevel + 1);
+  history = [];
+  moves = 0;
+
+  document.getElementById("levelText").innerText = "Level " + (level + 1);
+  document.getElementById("moveText").innerText = "Moves: 0";
+  document.getElementById("nextBtn").disabled = true;
+  document.getElementById("winPopup").style.display = "none";
+
   draw();
 }
 
+// DRAW
 function draw() {
   const game = document.getElementById("game");
   game.innerHTML = "";
 
   glasses.forEach((glass, i) => {
-    const div = document.createElement("div");
+    let div = document.createElement("div");
     div.className = "glass";
+    div.id = "glass-" + i;
+
+    if (glass.length === 4 && glass.every(c => c === glass[0])) {
+      div.classList.add("completed");
+    }
+
+    if (selected === i) div.classList.add("selected");
 
     glass.forEach(color => {
-      const layer = document.createElement("div");
+      let layer = document.createElement("div");
       layer.className = "layer";
       layer.style.background = color;
       div.appendChild(layer);
     });
 
-    div.onclick = () => handleClick(i);
+    div.onclick = () => clickGlass(i);
     game.appendChild(div);
   });
 }
 
-function handleClick(i) {
+// CLICK GLASS
+function clickGlass(i) {
+  if (isBusy) return;
+
+  if (glasses[i].length === 0) return;
+
+  if (selected === i) {
+    selected = null;
+    draw();
+    return;
+  }
+
   if (selected === null) {
     selected = i;
   } else {
-    pourWithAnimation(selected, i);
+    pour(selected, i);
     selected = null;
   }
+
+  draw();
 }
 
-// Only rotate if transfer is possible
-function pourWithAnimation(from, to) {
-  if(from===to || glasses[from].length===0 || glasses[to].length>=4) return;
+// INVALID MOVE EFFECT
+function invalidMove(i) {
+  let el = document.getElementById("glass-" + i);
+  if (!el) return;
 
-  let color = glasses[from][glasses[from].length-1];
-  if(glasses[to].length>0 && glasses[to][glasses[to].length-1]!==color) return;
+  el.classList.add("invalid");
+  setTimeout(() => el.classList.remove("invalid"), 400);
+}
 
-  let glassFrom = document.getElementsByClassName("glass")[from];
-  let direction = to > from ? 'pouring-left' : 'pouring-right';
-  glassFrom.classList.add(direction);
+// POUR LOGIC
+function pour(from, to) {
+  if (from === to || isBusy) return;
+  if (glasses[from].length === 0 || glasses[to].length >= 4) return;
 
-  setTimeout(()=>{
-    glasses[from].pop();
-    glasses[to].push(color);
-    glassFrom.classList.remove(direction);
+  let fromGlass = glasses[from];
+  let toGlass = glasses[to];
+
+  let color = fromGlass[fromGlass.length - 1];
+
+  if (toGlass.length > 0 && toGlass[toGlass.length - 1] !== color) {
+    invalidMove(from);
+    return;
+  }
+
+  history.push(JSON.parse(JSON.stringify(glasses)));
+
+  moves++;
+  document.getElementById("moveText").innerText = "Moves: " + moves;
+
+  isBusy = true;
+
+  setTimeout(() => {
+    let space = 4 - toGlass.length;
+
+    while (
+      fromGlass.length > 0 &&
+      fromGlass[fromGlass.length - 1] === color &&
+      space > 0
+    ) {
+      toGlass.push(fromGlass.pop());
+      space--;
+    }
+
+    isBusy = false;
     draw();
     checkWin();
-  }, 500);
+
+  }, 200);
 }
 
+// UNDO
+function undo() {
+  if (history.length === 0 || isBusy) return;
+
+  glasses = history.pop();
+  selected = null;
+
+  moves = Math.max(0, moves - 1);
+  document.getElementById("moveText").innerText = "Moves: " + moves;
+
+  draw();
+}
+
+// WIN CHECK
 function checkWin() {
-  let win = glasses.every(g => g.length===0 || (g.length===4 && g.every(c=>c===g[0])));
-  if(win){
-    levelPassed=true;
-    setTimeout(()=>alert("🎉 Level Complete! Click Next Level"), 100);
+  let win = glasses.every(g =>
+    g.length === 0 ||
+    (g.length === 4 && g.every(c => c === g[0]))
+  );
+
+  if (win) {
+    document.getElementById("nextBtn").disabled = false;
+    document.getElementById("winPopup").style.display = "flex";
   }
 }
 
-function restart() { loadLevel(); }
-
+// NEXT LEVEL
 function nextLevel() {
-  if(!levelPassed){ alert("❌ First complete the level!"); return; }
-  currentLevel++;
-  if(currentLevel>=totalLevels){ alert("🏆 You finished all 230 levels!"); currentLevel=0; }
-  loadLevel();
+  if (isBusy) return;
+  level++;
+  load();
 }
 
-loadLevel();
+// RESTART
+function restart() {
+  load();
+}
 </script>
+
 </body>
 </html>
